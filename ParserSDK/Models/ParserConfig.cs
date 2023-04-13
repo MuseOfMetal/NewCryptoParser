@@ -4,12 +4,10 @@ public class ParserConfig
 {
     public enum RequestRate
     {
-        Minute,
-        Hour,
-        Day,
-        Week,
-        Month,
-        Year,
+        Minute = 60_000,
+        Hour = 3600_000,
+        Day = 86400_000,
+        Week = 604800_000,
     }
     public string? PrefixUrl { get; set; }
     public RequestRate RequestRateType { get; set; }

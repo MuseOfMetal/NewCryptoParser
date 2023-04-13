@@ -6,15 +6,34 @@ using System.Diagnostics;
 using NewCryptoParser.Models;
 using System.Threading;
 using System.Security.Cryptography;
+using CryptoParserSdk.Models;
 
 namespace NewCryptoParser.Services
 {
 
     public class ParserManagerService : IParserManager
     {
+        private ConcurrentDictionary<string, CryptoParserScheduledTask> parsers;
+        private object lockObj;
+        private readonly ILogger<ParserManagerService> _logger;
+
         public void AddParser(string code, string name)
         {
-            throw new NotImplementedException();
+            var cryptoTask = new CryptoParserScheduledTask();
+            cryptoTask.CancellationTokenSource = new CancellationTokenSource();
+            cryptoTask.CryptoParser = CodeCompiler.CompileCodeAndGetObject<ICryptoParser>(code); ;
+            cryptoTask.PeriodicTask = new Task(_ =>
+            {
+                var parser = cryptoTask.CryptoParser;
+                var _localProjectsRepository = parser.GetCryptocurrencyList();
+                TimeSpan interval = TimeSpan.FromMilliseconds((int)parser.ParserConfig.RequestRateType / parser.ParserConfig.RequestsRate);
+                PeriodicTimer timer = new PeriodicTimer(interval);
+                while (!cryptoTask.CancellationTokenSource.IsCancellationRequested)
+                {
+
+                }
+
+            }, cryptoTask.CancellationTokenSource);
         }
 
         public ICryptoParser GetParser(string name)

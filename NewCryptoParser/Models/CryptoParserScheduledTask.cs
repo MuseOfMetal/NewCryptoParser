@@ -6,22 +6,23 @@ namespace NewCryptoParser.Models
     {
         public ICryptoParser CryptoParser { get; set; }
         public CancellationTokenSource CancellationTokenSource { get; set; }
-        public Timer ScheduledTask { get; set; }
+        public Task PeriodicTask { get; set; }
 
 
-        public CryptoParserScheduledTask(ICryptoParser cryptoParser, CancellationTokenSource cancellationTokenSource, Timer scheduledTask)
+        public CryptoParserScheduledTask(ICryptoParser cryptoParser, CancellationTokenSource cancellationTokenSource, Task periodicTask)
         {
             CryptoParser = cryptoParser;
             CancellationTokenSource = cancellationTokenSource;
-            ScheduledTask = scheduledTask;
+            PeriodicTask = periodicTask;
         }
 
         public void Dispose()
         {
-            ScheduledTask.Dispose();
-#pragma warning disable CS8625 // Литерал, равный NULL, не может быть преобразован в ссылочный тип, не допускающий значение NULL.
             CryptoParser = null;
-#pragma warning restore CS8625 // Литерал, равный NULL, не может быть преобразован в ссылочный тип, не допускающий значение NULL.
+            GC.Collect();
+            CancellationTokenSource.Cancel();
+            PeriodicTask.Dispose();
+            CancellationTokenSource.Dispose();
         }
 
         ~CryptoParserScheduledTask() 

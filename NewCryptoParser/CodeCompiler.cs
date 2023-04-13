@@ -130,6 +130,56 @@ internal class CodeCompiler
         return obj;
 
     }
+    public static T CompileCodeAndGetObject<T>(string code) where T : class
+    {
+        #region Load and compile .cs file (Do not touch)
+        SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(code);
+
+
+        CSharpCompilation compilation = CSharpCompilation.Create(
+            Path.GetRandomFileName(),
+            syntaxTrees: new[] { syntaxTree },
+            references: _references,
+            options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+        using var ms = new MemoryStream();
+
+        EmitResult result = compilation.Emit(ms);
+        if (!result.Success)
+        {
+            IEnumerable<Diagnostic> failures = result.Diagnostics.Where(diagnostic =>
+                diagnostic.IsWarningAsError ||
+                diagnostic.Severity == DiagnosticSeverity.Error);
+
+            var exceptions = new List<Exception>();
+            foreach (Diagnostic diagnostic in failures)
+            {
+                exceptions.Add(new Exception(diagnostic.GetMessage()));
+            }
+            throw new AggregateException(exceptions.ToArray());
+        }
+
+        ms.Seek(0, SeekOrigin.Begin);
+        #endregion
+
+        Assembly assembly = Assembly.Load(ms.ToArray());
+        T? obj = null;
+        foreach (var item in assembly.GetTypes())
+        {
+            try
+            {
+                obj = Activator.CreateInstance(item) as T;
+                if (obj is not null)
+                    break;
+            }
+            catch { } //Trying to create first suitable type
+
+        }
+        if (obj == null)
+            throw new Exception("Cannot find class");
+        return obj;
+
+    }
     static CodeCompiler()
     {
         loadDefaultReferences();
