@@ -16,24 +16,49 @@ namespace NewCryptoParser.Services
         private ConcurrentDictionary<string, CryptoParserScheduledTask> parsers;
         private object lockObj;
         private readonly ILogger<ParserManagerService> _logger;
+        private readonly IParserManager _parserManager;
 
         public void AddParser(string code, string name)
         {
             var cryptoTask = new CryptoParserScheduledTask();
             cryptoTask.CancellationTokenSource = new CancellationTokenSource();
             cryptoTask.CryptoParser = CodeCompiler.CompileCodeAndGetObject<ICryptoParser>(code); ;
-            cryptoTask.PeriodicTask = new Task(_ =>
+            cryptoTask.PeriodicTask = new Task(async _ =>
             {
                 var parser = cryptoTask.CryptoParser;
                 var _localProjectsRepository = parser.GetCryptocurrencyList();
                 TimeSpan interval = TimeSpan.FromMilliseconds((int)parser.ParserConfig.RequestRateType / parser.ParserConfig.RequestsRate);
                 PeriodicTimer timer = new PeriodicTimer(interval);
-                while (!cryptoTask.CancellationTokenSource.IsCancellationRequested)
+                while (!cryptoTask.CancellationTokenSource.IsCancellationRequested && await timer.WaitForNextTickAsync())
                 {
+                    var projects = parser.GetCryptocurrencyList();
+                    var newProjects = CheckProjects(projects, _localProjectsRepository);
+                    foreach (var newProject in newProjects)
+                    {
+                        if (newProject.CryptocurrencyInfo == null)
+                            newProject.CryptocurrencyInfo = parser.GetCryptocurrencyInfo(newProject.ParamToSearchInfo);
+                    }
+                    _localProjectsRepository = newProjects;
 
                 }
 
             }, cryptoTask.CancellationTokenSource);
+
+
+            static List<ParsingResult> CheckProjects(List<ParsingResult> parsingResults, List<ParsingResult> repository)
+            {
+                var newProjects = new List<ParsingResult>();
+                foreach (var project in parsingResults)
+                {
+                    if (repository.FirstOrDefault(p => p.ProjectUrl == project.ProjectUrl) == null)
+                    {
+                        newProjects.Add(project);
+                    }
+                }
+                return newProjects;
+            }
+
+
         }
 
         public ICryptoParser GetParser(string name)

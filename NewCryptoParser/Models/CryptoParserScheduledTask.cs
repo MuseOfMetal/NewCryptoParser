@@ -9,11 +9,16 @@ namespace NewCryptoParser.Models
         public Task PeriodicTask { get; set; }
 
 
-        public CryptoParserScheduledTask(ICryptoParser cryptoParser, CancellationTokenSource cancellationTokenSource, Task periodicTask)
+        //public CryptoParserScheduledTask(ICryptoParser cryptoParser, CancellationTokenSource cancellationTokenSource, Task periodicTask)
+        //{
+        //    CryptoParser = cryptoParser;
+        //    CancellationTokenSource = cancellationTokenSource;
+        //    PeriodicTask = periodicTask;
+        //}
+
+        public CryptoParserScheduledTask()
         {
-            CryptoParser = cryptoParser;
-            CancellationTokenSource = cancellationTokenSource;
-            PeriodicTask = periodicTask;
+            
         }
 
         public void Dispose()
