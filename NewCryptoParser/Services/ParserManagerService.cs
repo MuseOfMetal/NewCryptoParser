@@ -50,7 +50,10 @@ namespace NewCryptoParser.Services
 
         public void UpdateParser(string code, string name)
         {
-            parsers.TryUpdate(name, createCryptoParserScheduledTask(code, name));
+            parsers.TryGetValue(name, out var parser);
+            parser.Dispose();
+
+            parsers.TryUpdate(name, createCryptoParserScheduledTask(code, name), parser);
         }
 
         private CryptoParserScheduledTask createCryptoParserScheduledTask(string code, string name)
