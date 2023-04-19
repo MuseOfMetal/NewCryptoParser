@@ -20,6 +20,41 @@ namespace NewCryptoParser.Services
 
         public void AddParser(string code, string name)
         {
+            parsers.TryAdd(name, createCryptoParserScheduledTask(code, name));
+
+            static List<ParsingResult> CheckProjects(List<ParsingResult> parsingResults, List<ParsingResult> repository)
+            {
+                var newProjects = new List<ParsingResult>();
+                foreach (var project in parsingResults)
+                {
+                    if (repository.FirstOrDefault(p => p.ProjectUrl == project.ProjectUrl) == null)
+                    {
+                        newProjects.Add(project);
+                    }
+                }
+                return newProjects;
+            }
+        }
+
+        public ICryptoParser GetParser(string name)
+        {
+            parsers.TryGetValue(name, out var parser);
+            return parser.CryptoParser;
+        }
+
+        public void RemoveParser(string name)
+        {
+            parsers.TryRemove(name, out var parser);
+            parser.Dispose();
+        }
+
+        public void UpdateParser(string code, string name)
+        {
+            parsers.TryUpdate(name, createCryptoParserScheduledTask(code, name));
+        }
+
+        private CryptoParserScheduledTask createCryptoParserScheduledTask(string code, string name)
+        {
             var cryptoTask = new CryptoParserScheduledTask();
             cryptoTask.CancellationTokenSource = new CancellationTokenSource();
             cryptoTask.CryptoParser = CodeCompiler.CompileCodeAndGetObject<ICryptoParser>(code); ;
@@ -43,40 +78,8 @@ namespace NewCryptoParser.Services
                 }
 
             }, cryptoTask.CancellationTokenSource);
-
-
-            static List<ParsingResult> CheckProjects(List<ParsingResult> parsingResults, List<ParsingResult> repository)
-            {
-                var newProjects = new List<ParsingResult>();
-                foreach (var project in parsingResults)
-                {
-                    if (repository.FirstOrDefault(p => p.ProjectUrl == project.ProjectUrl) == null)
-                    {
-                        newProjects.Add(project);
-                    }
-                }
-                return newProjects;
-            }
-
-
         }
 
-        public ICryptoParser GetParser(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void RemoveParser(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UpdateParser(string code, string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        
     }
 
     //public class ParserManagerService
