@@ -71,7 +71,6 @@ namespace NewCryptoParser.Services
             Environment.CurrentDirectory +
             Path.DirectorySeparatorChar +
             "Parsers";
-        private string path => _configurationProvider.Get
 
         public override Task StartAsync(CancellationToken cancellationToken)
         {
@@ -146,11 +145,10 @@ namespace NewCryptoParser.Services
             await Task.CompletedTask;
         }
 
-        public FileManagerService(ILogger<FileManagerService> logger, IServiceProvider serviceProvider, Iconfig configurationProvider)
+        public FileManagerService(ILogger<FileManagerService> logger, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
-            _configurationProvider = configurationProvider;
         }
     }
 }
