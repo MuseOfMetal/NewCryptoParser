@@ -2,23 +2,36 @@
 using NewCryptoParser.Abstract;
 using NewCryptoParser.Models;
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 
 namespace NewCryptoParser.Services
 {
     public class NewCryptocurrencyProjectManagerService : INewCryptocurrencyProjectManager
     {
-        [NotNull]
         private readonly DbService _context;
         private readonly ILogger<NewCryptocurrencyProjectManagerService> _logger;
-        private Timer _timer;
+        //private static Timer _timer;
+        private static object _lockObj;
         private ConcurrentQueue<(string parserName, ParsingResult project)> _buffer;
+        //public void AddNewProjects(string parserName, List<ParsingResult> projects)
+        //{
+        //    foreach (var project in projects)
+        //    {
+        //        _buffer.Enqueue((parserName, project));
+        //    }
+        //}
+
         public void AddNewProjects(string parserName, List<ParsingResult> projects)
         {
-            foreach (var project in projects)
+            Task.Run(() =>
             {
-                _buffer.Enqueue((parserName, project));
-            }
+                lock (_lockObj)
+                {
+                    foreach (var project in projects)
+                    {
+                        dataProccessor(parserName, project);
+                    }
+                }
+            });
         }
 
         public NewCryptocurrencyProject? GetLatestProject()
@@ -41,21 +54,26 @@ namespace NewCryptoParser.Services
             _context = context;
             _logger = logger;
             _buffer = new ConcurrentQueue<(string parserName, ParsingResult project)>();
-            _timer = new Timer(_ =>
-            {
-                try
-                {
-                    while (_buffer.Count > 0)
-                    {
-                        _buffer.TryDequeue(out var result);
-                        dataProccessor(result.parserName, result.project);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error occured while proccess new cryptocurrency project");
-                }
-            }, null, 0, 1000);
+        }
+
+        static NewCryptocurrencyProjectManagerService()
+        {
+            _lockObj = new object();
+            //_timer = new Timer(_ =>
+            //{
+            //    try
+            //    {
+            //        while (_buffer.Count > 0)
+            //        {
+            //            _buffer.TryDequeue(out var result);
+            //            dataProccessor(result.parserName, result.project);
+            //        }
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        _logger.LogError(ex, "Error occured while proccess new cryptocurrency project");
+            //    }
+            //}, null, 0, 1000);
         }
 
         private void dataProccessor(string parserName, ParsingResult project)

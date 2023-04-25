@@ -17,7 +17,12 @@ try
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
-    builder.Services.AddParserManager();
+    //builder.Services.AddParserManager();
+    //builder.Services.AddSingleton<IFileManager, FileManagerService>();
+    builder.Services.AddScoped<INewCryptocurrencyProjectManager, NewCryptocurrencyProjectManagerService>();
+    builder.Services.AddScoped<IParserManager, ParserManagerService>();
+    builder.Services.AddHostedService<FileManagerService>();
+    
     builder.Logging.ClearProviders();
     builder.Services.AddDbContext<DbService>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
     builder.Host.UseNLog();
@@ -29,7 +34,7 @@ try
         app.UseSwagger();
         app.UseSwaggerUI();
     }
-    app.Services.GetService<IParserManager>();
+    
     
     app.UseHttpsRedirection();
     app.UseAuthorization();

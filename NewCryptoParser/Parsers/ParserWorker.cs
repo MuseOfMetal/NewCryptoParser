@@ -5,7 +5,7 @@ using CryptoParserSdk;
 using CryptoParserSdk.Models;
 using System.Collections.Generic;
 
-namespace ParserPlugin
+namespace ParserPlugin;
 class ParserWorker : ICryptoParser
 {
 

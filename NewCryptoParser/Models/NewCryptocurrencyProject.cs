@@ -1,9 +1,11 @@
 ﻿using CryptoParserSdk.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace NewCryptoParser.Models
 {
     public class NewCryptocurrencyProject
     {
+        [Key]
         public int Id { get; set; }
         public string ParserName { get; set; } = string.Empty;
         public string ProjectName { get; set; } = string.Empty;

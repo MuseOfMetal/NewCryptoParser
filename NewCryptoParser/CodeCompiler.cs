@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
+using NewCryptoParser.Exceptions;
 using System.Reflection;
 
 namespace NewCryptoParser;
@@ -156,7 +157,7 @@ internal class CodeCompiler
             {
                 exceptions.Add(new Exception(diagnostic.GetMessage()));
             }
-            throw new AggregateException(exceptions.ToArray());
+            throw new CompilerException(exceptions.ToArray());
         }
 
         ms.Seek(0, SeekOrigin.Begin);

@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <Compile Remove="Parsers\Counter-strike  Global Offensive 2023.03.02 - 15.22.10.06.DVR.cs" />
+    <Compile Remove="Parsers\Disabled\ParserWorker.cs" />
     <Compile Remove="Parsers\ParserWorker.cs" />
   </ItemGroup>
 
@@ -26,13 +27,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Parsers\ParserWorker.cs">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="..\ParserSDK\CryptoParserSdk.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ParserSDK\CryptoParserSdk.csproj" />
+    <Folder Include="Parsers\Disabled\" />
   </ItemGroup>
 
 </Project>
