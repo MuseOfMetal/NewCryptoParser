@@ -1,0 +1,47 @@
+{
+  "Id": 0,
+  "ParserName": "",
+  "ProjectName": "",
+  "ProjectSymbol": "",
+  "Infos": [
+    {
+      "Id": 0,
+      "ParserName": "",
+      "ProjectUrl": "",
+      "CoinGeckoUrls": [
+      ],
+      "CoinMarketCapUrls": [
+      ],
+      "DiscordUrls": [
+      ],
+      "Emails": [
+      ],
+      "ExplorerUrls": [
+      ],
+      "FacebookUrls": [
+      ],
+      "MediumUrls": [
+      ],
+      "WebsiteUrls": [
+      ],
+      "SmartContract": [
+      ],
+      "SourceCodeUrls": [
+      ],
+      "RedditUrls": [
+      ],
+      "TelegramUrls": [
+      ],
+      "TwitterUrls": [
+      ],
+      "YoutubeUrls": [
+      ],
+      "OtherInfo": {
+        "data1": [
+          "value1",
+          "values2"
+        ]
+      }
+    }
+  ]
+}

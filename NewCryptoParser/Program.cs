@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using NewCryptoParser.Abstract;
 using NewCryptoParser.Services;
+using Newtonsoft.Json;
 using NLog;
 using NLog.Web;
 
@@ -33,9 +34,7 @@ try
     {
         app.UseSwagger();
         app.UseSwaggerUI();
-    }
-    
-    
+    }    
     app.UseHttpsRedirection();
     app.UseAuthorization();
     app.MapControllers();
@@ -50,6 +49,5 @@ catch (Exception exception)
 }
 finally
 {
-    Console.WriteLine("Hello");
     LogManager.Shutdown();
 }

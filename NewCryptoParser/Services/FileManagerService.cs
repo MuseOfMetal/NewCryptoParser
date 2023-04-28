@@ -1,67 +1,8 @@
-﻿using Microsoft.Extensions.Options;
-using NewCryptoParser.Abstract;
+﻿using NewCryptoParser.Abstract;
 using NewCryptoParser.Exceptions;
 
 namespace NewCryptoParser.Services
 {
-    //public class FileManagerService : IFileManager
-    //{
-    //    private static FileSystemWatcher _watcher;
-    //    private readonly IParserManager _parserManager;
-    //    private string parsersFolderPath =>
-    //        Environment.CurrentDirectory +
-    //        Path.DirectorySeparatorChar +
-    //        "Parsers";
-    //    private void _file_changed(object sender, FileSystemEventArgs e)
-    //    {
-    //        using StreamReader sr = new StreamReader(e.FullPath);
-    //        _parserManager.UpdateParser(sr.ReadToEnd(), Path.GetFileNameWithoutExtension(e.FullPath));
-    //    }
-
-    //    private void _file_deleted(object sender, FileSystemEventArgs e)
-    //    {
-    //        _parserManager.RemoveParser(Path.GetFileNameWithoutExtension(e.FullPath));
-    //    }
-
-    //    private void _file_created(object sender, FileSystemEventArgs e)
-    //    {
-    //        using StreamReader sr = new StreamReader(e.FullPath);
-    //        _parserManager.AddParser(sr.ReadToEnd(), Path.GetFileNameWithoutExtension(e.FullPath));
-    //    }
-
-    //    public string GetWorkPath()
-    //    {
-    //        return parsersFolderPath;
-    //    }
-
-    //    public string[] GetFiles()
-    //    {
-    //        return Directory.GetFiles(parsersFolderPath);
-    //    }
-
-    //    public void AddFile()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public void RemoveFile()
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public FileManagerService(IParserManager parserManager)
-    //    {
-    //        if (!Directory.Exists(parsersFolderPath))
-    //            Directory.CreateDirectory(parsersFolderPath);
-    //        _parserManager = parserManager;
-    //        _watcher = new FileSystemWatcher(parsersFolderPath);
-    //        _watcher.Created += _file_created;
-    //        _watcher.Deleted += _file_deleted;
-    //        _watcher.Changed += _file_changed;
-    //        _watcher.EnableRaisingEvents = true;
-    //    }
-    //}
-
     public class FileManagerService : BackgroundService
     {
         private readonly ILogger<FileManagerService> _logger;
@@ -72,9 +13,31 @@ namespace NewCryptoParser.Services
             Path.DirectorySeparatorChar +
             "Parsers";
 
-        public override Task StartAsync(CancellationToken cancellationToken)
+        public override async Task StartAsync(CancellationToken cancellationToken)
         {
-            return base.StartAsync(cancellationToken);
+            var files = Directory.GetFiles(parsersFolderPath).Where(file=>file.EndsWith(".cs"));
+            foreach (var file in files)
+            {
+                try
+                {
+                    var _parserManager = _getParserManager();
+                    using StreamReader sr = new StreamReader(file);
+                    _parserManager.AddParser(await sr.ReadToEndAsync(), Path.GetFileNameWithoutExtension(file));
+                }
+                catch (ParserAlreadyExist)
+                {
+                    _logger.LogWarning($"File [{file}] added. Parser exist");
+                }
+                catch (CompilerException ex)
+                {
+                    _logger.LogError(ex, $"Compilation error occurred during auto-add file [{file}]");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"An error occurred during auto-add file [{file}]");
+                }
+            }
+            await Task.CompletedTask;
         }
         
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -90,8 +53,7 @@ namespace NewCryptoParser.Services
             {
                 try
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var _parserManager = scope.ServiceProvider.GetService<IParserManager>();
+                    var _parserManager = _getParserManager();
                     using StreamReader sr = new StreamReader(e.FullPath);
                     _parserManager.AddParser(sr.ReadToEnd(), Path.GetFileNameWithoutExtension(e.FullPath));
                 }
@@ -109,13 +71,13 @@ namespace NewCryptoParser.Services
                 _logger.LogDebug($"FileSystemWatcher.Deleted [{e.FullPath}]");
                 try
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var _parserManager = scope.ServiceProvider.GetService<IParserManager>();
+                    var _parserManager = _getParserManager();
                     _parserManager.RemoveParser(Path.GetFileNameWithoutExtension(e.FullPath));
                 }
                 catch(Exception ex)
                 {
-                    _logger.LogError(ex, $"An error occurred while uninstalling the parser due to deleting file [{e.FullPath}].");
+                    _logger.LogError(ex, 
+                        $"An error occurred while uninstalling the parser due to deleting file [{e.FullPath}].");
                 }
             };
             _watcher.Changed += (o, e) => 
@@ -123,8 +85,7 @@ namespace NewCryptoParser.Services
                 _logger.LogDebug($"FileSystemWatcher.Changed [{e.FullPath}]");
                 try
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var _parserManager = scope.ServiceProvider.GetService<IParserManager>();
+                    var _parserManager = _getParserManager();
                     using StreamReader sr = new StreamReader(e.FullPath);
                     _parserManager.UpdateParser(sr.ReadToEnd(), Path.GetFileNameWithoutExtension(e.FullPath));
                 }
@@ -143,6 +104,12 @@ namespace NewCryptoParser.Services
             }
             _logger.LogInformation("Task completed.");
             await Task.CompletedTask;
+        }
+
+        private IParserManager? _getParserManager()
+        {
+            using var scope = _serviceProvider.CreateScope();
+            return scope.ServiceProvider.GetService<IParserManager>();
         }
 
         public FileManagerService(ILogger<FileManagerService> logger, IServiceProvider serviceProvider)
