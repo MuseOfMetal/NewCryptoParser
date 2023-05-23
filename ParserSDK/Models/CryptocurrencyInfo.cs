@@ -2,19 +2,31 @@
 
 public class CryptocurrencyInfo
 {
-    public List<string> CoinGeckoUrls { get; set; }                        = new();
-    public List<string> CoinMarketCapUrls { get; set; }                    = new();
-    public List<string> DiscordUrls { get; set; }                          = new();
-    public List<string> Emails { get; set; }                                = new();
-    public List<string> ExplorerUrls { get; set; }                         = new();
-    public List<string> FacebookUrls { get; set; }                         = new();
-    public List<string> MediumUrls { get; set; }                           = new();
-    public List<string> WebsiteUrls { get; set; }                          = new();
-    public List<string> SmartContract { get; set; }                        = new();
-    public List<string> SourceCodeUrls { get; set; }                       = new();
-    public List<string> RedditUrls { get; set; }                           = new();
-    public List<string> TelegramUrls { get; set; }                         = new();
-    public List<string> TwitterUrls { get; set; }                          = new();
-    public List<string> YoutubeUrls { get; set; }                          = new();
-    public Dictionary<string, List<string>> OtherInfo { get; set; }        = new();
+    public DateTime Start { get; set; }
+    public List<Platform> Platforms { get; set; } = new();
+    public string? Description { get; set; }
+    public List<Link> Links { get; set; } = new();
+
+    public void AddLink(string url, LinkType type = 0, string otherType = "Unknown")
+    {
+        var link = Links.FirstOrDefault(x => x.LinkType == type);
+        if (link == null)
+        {
+            var newLink = new Link();
+            newLink.Urls.Add(url);
+            newLink.LinkType = type;
+            if (type == 0)
+                otherType = "Unknown";
+            Links.Add(newLink);
+        }
+        else
+            link.Urls.Add(url);
+    }
+
+    //    public void AddPlatform(string? name = null, string? type = null, string? smartContract = null)
+    //    {
+
+
+    //    }
+    //
 }

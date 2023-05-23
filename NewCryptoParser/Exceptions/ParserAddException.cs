@@ -10,4 +10,8 @@ public class ParserAddException : Exception
     {
         
     }
+    public ParserAddException(string message, Exception ex) : base(message, ex)
+    {
+
+    }
 }

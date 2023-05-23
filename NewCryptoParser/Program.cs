@@ -11,25 +11,16 @@ logger.Debug("init main");
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-
-    // Add services to the container.
-
     builder.Services.AddControllers();
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
-    //builder.Services.AddParserManager();
-    //builder.Services.AddSingleton<IFileManager, FileManagerService>();
-    builder.Services.AddScoped<INewCryptocurrencyProjectManager, NewCryptocurrencyProjectManagerService>();
-    builder.Services.AddScoped<IParserManager, ParserManagerService>();
+    builder.Services.AddSingleton<INewCryptocurrencyProjectManager, NewCryptocurrencyProjectManagerService>();
+    builder.Services.AddSingleton<IParserManager, ParserManagerService>();
     builder.Services.AddHostedService<FileManagerService>();
-    
     builder.Logging.ClearProviders();
     builder.Services.AddDbContext<DbService>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
     builder.Host.UseNLog();
     var app = builder.Build();
-
-    // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
@@ -39,9 +30,7 @@ try
     app.UseAuthorization();
     app.MapControllers();
     app.Run();
-
 }
-
 catch (Exception exception)
 {
     logger.Error(exception, "Stopped program because of exception");

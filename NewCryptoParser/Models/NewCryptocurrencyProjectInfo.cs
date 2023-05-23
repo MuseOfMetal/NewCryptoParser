@@ -7,7 +7,7 @@ namespace NewCryptoParser.Models
     {
         [Key]
         public int Id { get; set; }
-        public string ParserName { get; set; } = string.Empty;
+        public string ExchangeUrl { get; set; } = string.Empty;
         public string ProjectUrl { get; set; } = string.Empty;
     }
 }

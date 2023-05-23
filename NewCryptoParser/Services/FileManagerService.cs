@@ -12,10 +12,9 @@ namespace NewCryptoParser.Services
             Environment.CurrentDirectory +
             Path.DirectorySeparatorChar +
             "Parsers";
-
-        public override async Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var files = Directory.GetFiles(parsersFolderPath).Where(file=>file.EndsWith(".cs"));
+            var files = Directory.GetFiles(parsersFolderPath).Where(file => file.EndsWith(".cs"));
             foreach (var file in files)
             {
                 try
@@ -23,6 +22,7 @@ namespace NewCryptoParser.Services
                     var _parserManager = _getParserManager();
                     using StreamReader sr = new StreamReader(file);
                     _parserManager.AddParser(await sr.ReadToEndAsync(), Path.GetFileNameWithoutExtension(file));
+                    _logger.LogInformation($"Parser [{file}] successfully loaded");
                 }
                 catch (ParserAlreadyExist)
                 {
@@ -34,25 +34,23 @@ namespace NewCryptoParser.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"An error occurred during auto-add file [{file}]");
+                    _logger.LogError(ex, $"An error occurred during auto-add file [{file}]");
                 }
             }
-            await Task.CompletedTask;
-        }
-        
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            _logger.LogInformation("Task started.");
+
+            _logger.LogInformation("File manager service started.");
             using var _watcher = new FileSystemWatcher(parsersFolderPath);
             if (!Directory.Exists(parsersFolderPath))
                 Directory.CreateDirectory(parsersFolderPath);
-
-            //_watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size;
 
             _watcher.Created += (o, e) =>
             {
                 try
                 {
+                    _logger.LogDebug($"FileSystemWatcher.Created [{e.FullPath}]");
+                    if (!e.FullPath.EndsWith(".cs"))
+                        return;
+                    WaitForFile(e.FullPath);
                     var _parserManager = _getParserManager();
                     using StreamReader sr = new StreamReader(e.FullPath);
                     _parserManager.AddParser(sr.ReadToEnd(), Path.GetFileNameWithoutExtension(e.FullPath));
@@ -71,6 +69,8 @@ namespace NewCryptoParser.Services
                 _logger.LogDebug($"FileSystemWatcher.Deleted [{e.FullPath}]");
                 try
                 {
+                    if (!e.FullPath.EndsWith(".cs"))
+                        return;
                     var _parserManager = _getParserManager();
                     _parserManager.RemoveParser(Path.GetFileNameWithoutExtension(e.FullPath));
                 }
@@ -80,21 +80,6 @@ namespace NewCryptoParser.Services
                         $"An error occurred while uninstalling the parser due to deleting file [{e.FullPath}].");
                 }
             };
-            _watcher.Changed += (o, e) => 
-            {
-                _logger.LogDebug($"FileSystemWatcher.Changed [{e.FullPath}]");
-                try
-                {
-                    var _parserManager = _getParserManager();
-                    using StreamReader sr = new StreamReader(e.FullPath);
-                    _parserManager.UpdateParser(sr.ReadToEnd(), Path.GetFileNameWithoutExtension(e.FullPath));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"An error occurred while updating the parser from file [{e.FullPath}].");
-                    
-                }
-            };
 
             _watcher.EnableRaisingEvents = true;
 
@@ -102,7 +87,7 @@ namespace NewCryptoParser.Services
             {
                 await Task.Delay(200, stoppingToken);
             }
-            _logger.LogInformation("Task completed.");
+            _logger.LogWarning("File manager service stopped.");
             await Task.CompletedTask;
         }
 
@@ -110,6 +95,25 @@ namespace NewCryptoParser.Services
         {
             using var scope = _serviceProvider.CreateScope();
             return scope.ServiceProvider.GetService<IParserManager>();
+        }
+
+
+        private bool IsFileReady(string filename)
+        {
+            try
+            {
+                _logger.LogDebug($"Waiting for file [{filename}]");
+                using (FileStream inputStream = File.Open(filename, FileMode.Open, FileAccess.Read, FileShare.None))
+                    return inputStream.Length > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        private void WaitForFile(string filename)
+        {
+            while (!IsFileReady(filename)) { }
         }
 
         public FileManagerService(ILogger<FileManagerService> logger, IServiceProvider serviceProvider)

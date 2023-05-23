@@ -1,4 +1,5 @@
 ﻿using CryptoParserSdk.Models;
+using Microsoft.EntityFrameworkCore;
 using NewCryptoParser.Abstract;
 using NewCryptoParser.Models;
 using System.Collections.Concurrent;
@@ -7,40 +8,29 @@ namespace NewCryptoParser.Services
 {
     public class NewCryptocurrencyProjectManagerService : INewCryptocurrencyProjectManager
     {
-        private readonly DbService _context;
+        private readonly IServiceProvider _provider;
         private readonly ILogger<NewCryptocurrencyProjectManagerService> _logger;
-        //private static Timer _timer;
-        private static object _lockObj;
+
         private ConcurrentQueue<(string parserName, ParsingResult project)> _buffer;
-        //public void AddNewProjects(string parserName, List<ParsingResult> projects)
-        //{
-        //    foreach (var project in projects)
-        //    {
-        //        _buffer.Enqueue((parserName, project));
-        //    }
-        //}
+
 
         public void AddNewProjects(string parserName, List<ParsingResult> projects)
         {
-            Task.Run(() =>
+            foreach (var project in projects)
             {
-                lock (_lockObj)
-                {
-                    foreach (var project in projects)
-                    {
-                        dataProccessor(parserName, project);
-                    }
-                }
-            });
+                _buffer.Enqueue((parserName, project));
+            }
         }
 
         public NewCryptocurrencyProject? GetLatestProject()
         {
+            using var _context = getDbService();
             return _context.NewCryptocurrencyProjects.Last();
         }
 
         public NewCryptocurrencyProject? GetProjectById(int id)
         {
+            using var _context = getDbService();
             return _context.NewCryptocurrencyProjects.Find(id);
         }
 
@@ -49,34 +39,36 @@ namespace NewCryptoParser.Services
             throw new NotImplementedException();
         }
 
-        public NewCryptocurrencyProjectManagerService(DbService context, ILogger<NewCryptocurrencyProjectManagerService> logger)
+        public NewCryptocurrencyProjectManagerService(ILogger<NewCryptocurrencyProjectManagerService> logger, IServiceProvider provider)
         {
-            _context = context;
+            _provider = provider.CreateScope().ServiceProvider;
             _logger = logger;
             _buffer = new ConcurrentQueue<(string parserName, ParsingResult project)>();
+            new Thread(() =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        while (!_buffer.IsEmpty)
+                        {
+                            var _context = getDbService();
+                            _logger.LogDebug("Creating db context");
+                            _buffer.TryDequeue(out var data);
+                            dataProccessor(data.parserName, data.project, _context);
+                            _context.Dispose();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "");
+                    }
+                    Thread.Sleep(100);
+                }
+            }).Start();
         }
 
-        static NewCryptocurrencyProjectManagerService()
-        {
-            _lockObj = new object();
-            //_timer = new Timer(_ =>
-            //{
-            //    try
-            //    {
-            //        while (_buffer.Count > 0)
-            //        {
-            //            _buffer.TryDequeue(out var result);
-            //            dataProccessor(result.parserName, result.project);
-            //        }
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        _logger.LogError(ex, "Error occured while proccess new cryptocurrency project");
-            //    }
-            //}, null, 0, 1000);
-        }
-
-        private void dataProccessor(string parserName, ParsingResult project)
+        private void dataProccessor(string exchangeUrl, ParsingResult project, DbService _context)
         {
             var _projs = _context?.NewCryptocurrencyProjects;
             if (_projs == null)
@@ -84,28 +76,41 @@ namespace NewCryptoParser.Services
                 _logger.LogError("List of new projects is null");
                 return;
             }
-
             var finded = _projs.FirstOrDefault(p =>
             p.ProjectName.ToLower() == project.Name.ToLower() &&
             p.ProjectSymbol.ToLower() == project.Symbol.ToLower());
-            NewCryptocurrencyProjectInfo info = project.CryptocurrencyInfo as NewCryptocurrencyProjectInfo ?? new NewCryptocurrencyProjectInfo();
-            info.ParserName = parserName;
-            info.ProjectUrl = project.ProjectUrl;
+
+            //NewCryptocurrencyProjectInfo info = project.CryptocurrencyInfo as NewCryptocurrencyProjectInfo ?? new NewCryptocurrencyProjectInfo();
+            NewCryptocurrencyProjectInfo info = new NewCryptocurrencyProjectInfo() 
+            { 
+                Links = project.CryptocurrencyInfo.Links,
+                Platforms = project.CryptocurrencyInfo.Platforms,
+                Start = project.CryptocurrencyInfo.Start,
+                Description = project.CryptocurrencyInfo.Description,
+                ExchangeUrl = exchangeUrl,
+                ProjectUrl = project.ProjectUrl
+            };
             if (finded == null)
             {
                 _context.NewCryptocurrencyProjects.Add(new NewCryptocurrencyProject()
                 {
-                    ParserName = parserName,
+                    ExchangeUrl = exchangeUrl,
                     ProjectName = project.Name,
                     ProjectSymbol = project.Symbol,
-                    Infos = new List<NewCryptocurrencyProjectInfo> { info }
+                    Info = info
                 });
             }
             else
             {
-                finded.Infos.Add(info);
+                if (finded.OtherInfos.FirstOrDefault(x => x.ExchangeUrl == exchangeUrl) == null)
+                    finded.OtherInfos.Add(info);
             }
             _context.SaveChanges();
+        }
+
+        private DbService getDbService()
+        {
+            return _provider.CreateScope().ServiceProvider.GetService<DbService>();
         }
     }
 }

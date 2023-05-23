@@ -9,16 +9,25 @@ namespace NewCryptoParser.Services
 {
     public class ParserManagerService : IParserManager
     {
-        private static ConcurrentDictionary<string, CryptoParserScheduledTask> parsers;
+        private ConcurrentDictionary<string, CryptoParserScheduledTask> parsers;
         private readonly ILogger<ParserManagerService> _logger;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly INewCryptocurrencyProjectManager _projectManager;
         public void AddParser(string code, string name)
         {
             if (parsers.ContainsKey(name))
                 throw new ParserAlreadyExist();
-            var successAdd = parsers.TryAdd(name, createCryptoParserScheduledTask(code, name));
+            bool successAdd = false;
+            try
+            {
+                successAdd = parsers.TryAdd(name, createCryptoParserScheduledTask(code, name));
+            }
+            catch (Exception ex)
+            {
+                throw new ParserAddException("Parser contains error", ex);
+            }
             if (!successAdd)
                 throw new ParserAddException("ConcurrentDictionary.TryAdd() return false");
+            _logger.LogInformation($"Parser [{name}] added");
         }
 
         public CryptoParserScheduledTask? GetParser(string name)
@@ -35,60 +44,93 @@ namespace NewCryptoParser.Services
             if (!successRemove)
                 throw new ParserRemovalException("ConcurrentDictionary.TryRemove() return false");
             parser.Dispose();
-        }
-
-        public void UpdateParser(string code, string name)
-        {
-            var getSuccess = parsers.TryGetValue(name, out var parser);
-            if (getSuccess)
-            {
-                parser.Dispose();
-                var successUpdate = parsers.TryUpdate(name, createCryptoParserScheduledTask(code, name), parser);
-                if (!successUpdate)
-                    throw new ParserRemovalException("ConcurrentDictionary.TryUpdate() return false");
-            }
-            else
-                AddParser(code, name);
+            _logger.LogInformation($"Parser [{name}] removed");
         }
 
         private CryptoParserScheduledTask createCryptoParserScheduledTask(string code, string name)
         {
             var cryptoTask = new CryptoParserScheduledTask();
             cryptoTask.CancellationTokenSource = new CancellationTokenSource();
-            cryptoTask.CryptoParser = CodeCompiler.CompileCodeAndGetObject<ICryptoParser>(code); ;
+            cryptoTask.CryptoParser = CodeCompiler.CompileCodeAndGetObject<CryptoParserAbstract>(code);
+
             cryptoTask.PeriodicTask = new Task(async _ =>
             {
-                var _parser = cryptoTask.CryptoParser;
                 var _name = name;
-                var _localProjectsRepository = _parser.GetCryptocurrencyList();
-
-                TimeSpan interval =
-                TimeSpan.FromMilliseconds((int)_parser.ParserConfig.RequestRateType /
-                _parser.ParserConfig.RequestsRate);
-
-                PeriodicTimer timer = new PeriodicTimer(interval);
-
-                while (
-                !cryptoTask.CancellationTokenSource.IsCancellationRequested &&
-                await timer.WaitForNextTickAsync()
-                )
+                try
                 {
-                    var projects = _parser.GetCryptocurrencyList();
-                    var newProjects = CheckProjects(projects, _localProjectsRepository);
+                    var _parser = cryptoTask.CryptoParser;
+                    TimeSpan interval =
+                        TimeSpan.FromSeconds((double)_parser.ParserConfig.RequestRateType /
+                        _parser.ParserConfig.RequestsRate);
 
-                    foreach (var newProject in newProjects)
-                        if (newProject.CryptocurrencyInfo == null)
-                            newProject.CryptocurrencyInfo =
-                            _parser.GetCryptocurrencyInfo(newProject.ParamToSearchInfo);
+                    PeriodicTimer timer = new PeriodicTimer(interval);
 
-                    _localProjectsRepository = newProjects;
-                    using var scope = _serviceProvider.CreateScope();
-                    var _newCryptocurrencyProjectManager =
-                    scope.ServiceProvider.GetService<INewCryptocurrencyProjectManager>();
-                    _newCryptocurrencyProjectManager.AddNewProjects(_name, _localProjectsRepository);
+                    _logger.LogDebug($"[{_name}] Task started");
+
+                    var _localProjectsRepository = _parser.GetCryptocurrencyList();
+                    await timer.WaitForNextTickAsync();
+                    while (
+                    !cryptoTask.CancellationTokenSource.IsCancellationRequested &&
+                    await timer.WaitForNextTickAsync()
+                    )
+                    {
+                        try
+                        {
+                            _logger.LogDebug($"[{_name}] requesting data");
+                            var projects = _parser.GetCryptocurrencyList();
+
+                            var newProjects = CheckProjects(projects, _localProjectsRepository);
+                            
+                            if (_parser.ParserConfig.MultiQueryInfoSupport)
+                            {
+                                await timer.WaitForNextTickAsync();
+                                var infos = _parser.GetCryptocurrenciesInfo(newProjects.Select(x=>x.ParamToSearchInfo).ToArray());
+                                foreach (var info in infos)
+                                {
+                                    newProjects.First(x=>x.ParamToSearchInfo == info.ParamToSearchInfo).CryptocurrencyInfo = info.CryptocurrencyInfo;
+                                }
+                            }
+                            else
+                            {
+                                foreach (var newProject in newProjects)
+                                {
+
+                                    //if (newProject.CryptocurrencyInfo == new CryptocurrencyInfo() || newProject.CryptocurrencyInfo == null)
+                                    //{
+                                    //    await timer.WaitForNextTickAsync();
+                                    //    _logger.LogDebug($"[{_name}] requesting additional data for {newProject.Name} project");
+                                    //    newProject.CryptocurrencyInfo =
+                                    //        _parser.GetCryptocurrencyInfo(newProject.ParamToSearchInfo);
+                                    //}
+
+                                    var info = _parser.GetCryptocurrencyInfo(newProject.ParamToSearchInfo, newProject.CryptocurrencyInfo ?? new CryptocurrencyInfo());
+
+                                    if (info != null)
+                                    {
+                                        await timer.WaitForNextTickAsync();
+                                    }
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(_parser.ParserConfig.PrefixUrl))
+                                newProjects.Select(x => x.ProjectUrl = x.ProjectUrl.Insert(0, _parser.ParserConfig.PrefixUrl));
+
+                            _localProjectsRepository = projects;
+                            _projectManager.AddNewProjects(_parser.CryptocurrencyExchangeUrl, newProjects);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(new ParserRuntimeException(ex), $"Parser error [{_name}]");
+                        }
+                    }
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"[{_name}]");
+                }
+                _logger.LogWarning($"[{_name}] Task stopped");
             }, cryptoTask.CancellationTokenSource);
-
+            cryptoTask.PeriodicTask.Start();
             return cryptoTask;
 
             static List<ParsingResult> CheckProjects(
@@ -106,15 +148,11 @@ namespace NewCryptoParser.Services
 
         public ParserManagerService(
             ILogger<ParserManagerService> logger,
-            IServiceProvider serviceProvider
+            INewCryptocurrencyProjectManager projectManager
             )
         {
             _logger = logger;
-            _serviceProvider = serviceProvider;
-        }
-
-        static ParserManagerService()
-        {
+            _projectManager = projectManager;
             parsers = new ConcurrentDictionary<string, CryptoParserScheduledTask>();
         }
     }
