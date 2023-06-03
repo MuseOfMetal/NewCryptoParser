@@ -19,7 +19,7 @@ internal class CoinGecko : CryptoParserAbstract
     {
         PrefixUrl = "https://www.coingecko.com/en/coins/",
         RequestRateType = ParserConfig.RequestRate.Minute,
-        RequestsRate = 20
+        RequestsRate = 10
     };
 
     internal class Coin
