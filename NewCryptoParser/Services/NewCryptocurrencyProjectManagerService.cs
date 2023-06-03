@@ -1,5 +1,4 @@
-﻿using CryptoParserSdk.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using NewCryptoParser.Abstract;
 using NewCryptoParser.Models;
 using System.Collections.Concurrent;
@@ -11,10 +10,10 @@ namespace NewCryptoParser.Services
         private readonly IServiceProvider _provider;
         private readonly ILogger<NewCryptocurrencyProjectManagerService> _logger;
 
-        private ConcurrentQueue<(string parserName, ParsingResult project)> _buffer;
+        private ConcurrentQueue<(string parserName, CryptoParserSdk.Models.ParsingResult project)> _buffer;
 
 
-        public void AddNewProjects(string parserName, List<ParsingResult> projects)
+        public void AddNewProjects(string parserName, List<CryptoParserSdk.Models.ParsingResult> projects)
         {
             foreach (var project in projects)
             {
@@ -43,21 +42,26 @@ namespace NewCryptoParser.Services
         {
             _provider = provider.CreateScope().ServiceProvider;
             _logger = logger;
-            _buffer = new ConcurrentQueue<(string parserName, ParsingResult project)>();
+            _buffer = new ConcurrentQueue<(string parserName, CryptoParserSdk.Models.ParsingResult project)>();
             new Thread(() =>
             {
                 while (true)
                 {
                     try
                     {
-                        while (!_buffer.IsEmpty)
+                        if (!_buffer.IsEmpty)
                         {
-                            var _context = getDbService();
                             _logger.LogDebug("Creating db context");
-                            _buffer.TryDequeue(out var data);
-                            dataProccessor(data.parserName, data.project, _context);
+                            var _context = getDbService();
+                            while (!_buffer.IsEmpty)
+                            {
+                                _buffer.TryDequeue(out var data);
+                                dataProccessor(data.parserName, data.project, _context);
+                            }
+                            _context.SaveChanges();
                             _context.Dispose();
                         }
+
                     }
                     catch (Exception ex)
                     {
@@ -68,7 +72,7 @@ namespace NewCryptoParser.Services
             }).Start();
         }
 
-        private void dataProccessor(string exchangeUrl, ParsingResult project, DbService _context)
+        private void dataProccessor(string exchangeUrl, CryptoParserSdk.Models.ParsingResult project, DbService _context)
         {
             var _projs = _context?.NewCryptocurrencyProjects;
             if (_projs == null)
@@ -99,13 +103,7 @@ namespace NewCryptoParser.Services
                     ProjectSymbol = project.Symbol,
                     Info = info
                 });
-            }
-            else
-            {
-                if (finded.OtherInfos.FirstOrDefault(x => x.ExchangeUrl == exchangeUrl) == null)
-                    finded.OtherInfos.Add(info);
-            }
-            _context.SaveChanges();
+            }            
         }
 
         private DbService getDbService()

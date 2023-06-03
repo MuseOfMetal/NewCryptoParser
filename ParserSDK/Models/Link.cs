@@ -23,10 +23,10 @@ public enum LinkType
     SourceCode,
     Reddit,
     Slack,
+    TecnicalDoc,
     Telegram,
     TikTok,
     Twitch,
     Twitter,
-    WhitePaper,
     Youtube,
 }

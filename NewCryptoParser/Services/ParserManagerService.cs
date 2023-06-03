@@ -80,30 +80,40 @@ namespace NewCryptoParser.Services
                             var projects = _parser.GetCryptocurrencyList();
 
                             var newProjects = CheckProjects(projects, _localProjectsRepository);
-                            
+
                             if (_parser.ParserConfig.MultiQueryInfoSupport)
                             {
-                                await timer.WaitForNextTickAsync();
-                                var infos = _parser.GetCryptocurrenciesInfo(newProjects.Select(x=>x.ParamToSearchInfo).ToArray());
-                                foreach (var info in infos)
+                                if (newProjects.Count > 0)
                                 {
-                                    newProjects.First(x=>x.ParamToSearchInfo == info.ParamToSearchInfo).CryptocurrencyInfo = info.CryptocurrencyInfo;
+                                    IEnumerable<MultiQueryCryptocurrencyInfo[]> chunks;
+                                    if (_parser.ParserConfig.MultiQueryInfoLimit == 0)
+                                        chunks = new List<MultiQueryCryptocurrencyInfo[]>()
+                                        {
+                                            newProjects
+                                            .Select(x => new MultiQueryCryptocurrencyInfo() { ParamToSearchInfo = x.ParamToSearchInfo, CryptocurrencyInfo = x.CryptocurrencyInfo ?? new CryptocurrencyInfo() })
+                                            .ToArray()
+                                        };
+                                    else
+                                        chunks = newProjects
+                                            .Select(x => new MultiQueryCryptocurrencyInfo() { ParamToSearchInfo = x.ParamToSearchInfo, CryptocurrencyInfo = x.CryptocurrencyInfo ?? new CryptocurrencyInfo() })
+                                            .Chunk(_parser.ParserConfig.MultiQueryInfoLimit);
+
+                                    foreach (var chunk in chunks)
+                                    {
+                                        await timer.WaitForNextTickAsync();
+                                        var infos = _parser.GetCryptocurrenciesInfo(chunk.ToList());
+                                        foreach (var info in infos)
+                                            newProjects.First(x => x.ParamToSearchInfo == info.ParamToSearchInfo).CryptocurrencyInfo = info.CryptocurrencyInfo;
+                                    }
                                 }
                             }
                             else
                             {
                                 foreach (var newProject in newProjects)
                                 {
-
-                                    //if (newProject.CryptocurrencyInfo == new CryptocurrencyInfo() || newProject.CryptocurrencyInfo == null)
-                                    //{
-                                    //    await timer.WaitForNextTickAsync();
-                                    //    _logger.LogDebug($"[{_name}] requesting additional data for {newProject.Name} project");
-                                    //    newProject.CryptocurrencyInfo =
-                                    //        _parser.GetCryptocurrencyInfo(newProject.ParamToSearchInfo);
-                                    //}
-
-                                    var info = _parser.GetCryptocurrencyInfo(newProject.ParamToSearchInfo, newProject.CryptocurrencyInfo ?? new CryptocurrencyInfo());
+                                    if (newProject.CryptocurrencyInfo is null)
+                                        newProject.CryptocurrencyInfo = new CryptocurrencyInfo();
+                                    var info = _parser.GetCryptocurrencyInfo(newProject.ParamToSearchInfo, newProject.CryptocurrencyInfo);
 
                                     if (info != null)
                                     {
@@ -113,7 +123,10 @@ namespace NewCryptoParser.Services
                             }
 
                             if (!string.IsNullOrEmpty(_parser.ParserConfig.PrefixUrl))
-                                newProjects.Select(x => x.ProjectUrl = x.ProjectUrl.Insert(0, _parser.ParserConfig.PrefixUrl));
+                                foreach (var newProject in newProjects)
+                                {
+                                    newProject.ProjectUrl = newProject.ProjectUrl.Insert(0, _parser.ParserConfig.PrefixUrl);
+                                }
 
                             _localProjectsRepository = projects;
                             _projectManager.AddNewProjects(_parser.CryptocurrencyExchangeUrl, newProjects);

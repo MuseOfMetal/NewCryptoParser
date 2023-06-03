@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CryptoParserSdk.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NewCryptoParser.Models;
 using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 
 namespace NewCryptoParser.Services;
 
@@ -19,12 +22,9 @@ public class DbService : DbContext
                     x => JsonConvert.SerializeObject(x),
                     x => JsonConvert.DeserializeObject<NewCryptocurrencyProjectInfo>(x) ?? new()
             );
-        modelBuilder.Entity<NewCryptocurrencyProject>().Property(x => x.OtherInfos).HasConversion
-            (
-                    x => JsonConvert.SerializeObject(x),
-                    x => JsonConvert.DeserializeObject<List<NewCryptocurrencyProjectInfo>>(x) ?? new()
-            );
     }
     [NotNull]
     public DbSet<NewCryptocurrencyProject> NewCryptocurrencyProjects { get; set; }
+
+   
 }

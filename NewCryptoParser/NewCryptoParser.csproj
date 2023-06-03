@@ -28,8 +28,4 @@
     <ProjectReference Include="..\ParserSDK\CryptoParserSdk.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Parsers\" />
-  </ItemGroup>
-
 </Project>

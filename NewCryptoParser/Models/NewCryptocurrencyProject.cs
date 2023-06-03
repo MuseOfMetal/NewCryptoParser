@@ -1,5 +1,4 @@
-﻿using CryptoParserSdk.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace NewCryptoParser.Models
 {
@@ -11,7 +10,5 @@ namespace NewCryptoParser.Models
         public string ProjectName { get; set; } = string.Empty;
         public string ProjectSymbol { get; set; } = string.Empty;
         public NewCryptocurrencyProjectInfo Info { get; set; } = new();
-        public List<NewCryptocurrencyProjectInfo> OtherInfos { get; set; } = new();
-
     }
 }

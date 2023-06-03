@@ -15,4 +15,5 @@ public class ParserConfig
     public int RequestsRate { get; set; }
     public object? Custom { get; set; }
     public bool MultiQueryInfoSupport { get; set; } = false;
+    public int MultiQueryInfoLimit { get; set; }
 }

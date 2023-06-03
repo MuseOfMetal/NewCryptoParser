@@ -8,5 +8,5 @@ public abstract class CryptoParserAbstract
     public abstract ParserConfig ParserConfig { get; }
     public abstract List<ParsingResult> GetCryptocurrencyList();
     public virtual CryptocurrencyInfo? GetCryptocurrencyInfo(string projectId, CryptocurrencyInfo info) { return default; }
-    public virtual List<MultiQueryCryptocurrencyInfo>? GetCryptocurrenciesInfo(params string[] projectId) { return default; }
+    public virtual List<MultiQueryCryptocurrencyInfo>? GetCryptocurrenciesInfo(List<MultiQueryCryptocurrencyInfo> multiInfos) { return default; }
 }
