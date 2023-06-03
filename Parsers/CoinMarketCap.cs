@@ -21,7 +21,7 @@ namespace ParserPlugin
         public override ParserConfig ParserConfig => new ParserConfig()
         {
             PrefixUrl = "https://coinmarketcap.com/currencies/",
-            RequestRateType = ParserConfig.RequestRate.Hour,
+            RequestRateType = ParserConfig.RequestRate.Month,
             RequestsRate = 10000,
             MultiQueryInfoSupport = true,
             MultiQueryInfoLimit = 100
