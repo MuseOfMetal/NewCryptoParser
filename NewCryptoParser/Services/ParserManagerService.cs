@@ -116,20 +116,23 @@ namespace NewCryptoParser.Services
                                     var info = _parser.GetCryptocurrencyInfo(newProject.ParamToSearchInfo, newProject.CryptocurrencyInfo);
 
                                     if (info != null)
-                                    {
                                         await timer.WaitForNextTickAsync();
-                                    }
                                 }
                             }
 
-                            if (!string.IsNullOrEmpty(_parser.ParserConfig.PrefixUrl))
-                                foreach (var newProject in newProjects)
-                                {
-                                    newProject.ProjectUrl = newProject.ProjectUrl.Insert(0, _parser.ParserConfig.PrefixUrl);
-                                }
+                            if (newProjects.Count > 0)
+                            {
+                                if (!string.IsNullOrEmpty(_parser.ParserConfig.PrefixUrl))
+                                    foreach (var newProject in newProjects)
+                                    {
+                                        newProject.ProjectUrl = newProject.ProjectUrl.Insert(0, _parser.ParserConfig.PrefixUrl);
+                                    }
 
-                            _localProjectsRepository = projects;
-                            _projectManager.AddNewProjects(_parser.CryptocurrencyExchangeUrl, newProjects);
+                                _localProjectsRepository = projects;
+                                _logger.LogInformation($"[{_name}] Found {newProjects.Count} new project(-s)");
+                                _projectManager.AddNewProjects(_parser.CryptocurrencyExchangeUrl, newProjects);
+                            }
+
                         }
                         catch (Exception ex)
                         {
