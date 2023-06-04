@@ -67,7 +67,7 @@ namespace NewCryptoParser.Services
 
                     _logger.LogDebug($"[{_name}] Task started");
 
-                    var _localProjectsRepository = _parser.GetCryptocurrencyList();
+                    var _localProjectsRepository = _parser.GetCryptocurrencyList().SkipLast(1).ToList();
                     await timer.WaitForNextTickAsync();
                     while (
                     !cryptoTask.CancellationTokenSource.IsCancellationRequested &&
@@ -157,7 +157,14 @@ namespace NewCryptoParser.Services
                 var newProjects = new List<ParsingResult>();
                 foreach (var project in parsingResults)
                     if (repository.FirstOrDefault(p => p.ProjectUrl == project.ProjectUrl) == null)
-                        newProjects.Add(project);
+                        newProjects.Add(new()
+                        {
+                            Name = project.Name,
+                            Symbol = project.Symbol,
+                            ProjectUrl = project.ProjectUrl,
+                            ParamToSearchInfo = project.ParamToSearchInfo,
+                            CryptocurrencyInfo = project.CryptocurrencyInfo
+                        });
                 return newProjects;
             }
         }
