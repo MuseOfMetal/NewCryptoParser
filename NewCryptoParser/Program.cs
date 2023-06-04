@@ -14,8 +14,8 @@ try
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
-    builder.Services.AddSingleton<INewCryptocurrencyProjectManager, NewCryptocurrencyProjectManagerService>();
-    builder.Services.AddSingleton<IParserManager, ParserManagerService>();
+    builder.Services.AddParserManager();
+    builder.Services.AddNewCryptocurrencyProjectManager();
     builder.Services.AddHostedService<FileManagerService>();
     builder.Logging.ClearProviders();
     builder.Services.AddDbContext<DbService>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

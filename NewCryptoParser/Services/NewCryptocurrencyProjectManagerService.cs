@@ -21,21 +21,10 @@ namespace NewCryptoParser.Services
             }
         }
 
-        public NewCryptocurrencyProject? GetLatestProject()
+        public IEnumerable<NewCryptocurrencyProject> GetProjects()
         {
-            using var _context = getDbService();
-            return _context.NewCryptocurrencyProjects.Last();
-        }
-
-        public NewCryptocurrencyProject? GetProjectById(int id)
-        {
-            using var _context = getDbService();
-            return _context.NewCryptocurrencyProjects.Find(id);
-        }
-
-        public List<NewCryptocurrencyProject>? GetProjectsByIdRange(int startId, int endId)
-        {
-            throw new NotImplementedException();
+            var _context = getDbService();
+            return _context.NewCryptocurrencyProjects;
         }
 
         public NewCryptocurrencyProjectManagerService(ILogger<NewCryptocurrencyProjectManagerService> logger, IServiceProvider provider)
@@ -61,7 +50,6 @@ namespace NewCryptoParser.Services
                             _context.SaveChanges();
                             _context.Dispose();
                         }
-
                     }
                     catch (Exception ex)
                     {
