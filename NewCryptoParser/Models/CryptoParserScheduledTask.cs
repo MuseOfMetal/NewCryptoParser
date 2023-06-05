@@ -1,25 +1,24 @@
 ﻿using CryptoParserSdk;
 
-namespace NewCryptoParser.Models
+namespace NewCryptoParser.Models;
+
+public class CryptoParserScheduledTask : IDisposable
 {
-    public class CryptoParserScheduledTask : IDisposable
+    public CryptoParserAbstract CryptoParser { get; set; }
+    public CancellationTokenSource CancellationTokenSource { get; set; }
+    public Task PeriodicTask { get; set; }
+
+    public void Dispose()
     {
-        public CryptoParserAbstract CryptoParser { get; set; }
-        public CancellationTokenSource CancellationTokenSource { get; set; }
-        public Task PeriodicTask { get; set; }
+        CryptoParser = null;
+        GC.Collect();
+        CancellationTokenSource.Cancel();
+        PeriodicTask.Dispose();
+        CancellationTokenSource.Dispose();
+    }
 
-        public void Dispose()
-        {
-            CryptoParser = null;
-            GC.Collect();
-            CancellationTokenSource.Cancel();
-            PeriodicTask.Dispose();
-            CancellationTokenSource.Dispose();
-        }
-
-        ~CryptoParserScheduledTask() 
-        {
-            Dispose();
-        }
+    ~CryptoParserScheduledTask() 
+    {
+        Dispose();
     }
 }

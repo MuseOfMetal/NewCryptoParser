@@ -1,11 +1,10 @@
 ﻿using CryptoParserSdk.Models;
 using NewCryptoParser.Models;
 
-namespace NewCryptoParser.Abstract
+namespace NewCryptoParser.Abstract;
+
+public interface INewCryptocurrencyProjectManager
 {
-    public interface INewCryptocurrencyProjectManager
-    {
-        void AddNewProjects(string parserName, List<ParsingResult> projects);
-        IEnumerable<NewCryptocurrencyProject> GetProjects();
-    }
+    void AddNewProjects(string parserName, List<ParsingResult> projects);
+    IEnumerable<NewCryptocurrencyProject> GetProjects();
 }

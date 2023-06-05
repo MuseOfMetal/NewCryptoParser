@@ -1,6 +1,3 @@
-﻿namespace NewCryptoParser.Exceptions
-{
-    public class ParserAlreadyExist : Exception
-    {
-    }
-}
+﻿namespace NewCryptoParser.Exceptions;
+
+public class ParserAlreadyExist : Exception { }

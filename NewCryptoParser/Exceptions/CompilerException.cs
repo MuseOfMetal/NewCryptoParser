@@ -1,10 +1,9 @@
-﻿namespace NewCryptoParser.Exceptions
+﻿namespace NewCryptoParser.Exceptions;
+
+public class CompilerException : AggregateException
 {
-    public class CompilerException : AggregateException
+    public CompilerException(params Exception[] innerExceptions) : base(innerExceptions)
     {
-        public CompilerException(params Exception[] innerExceptions) : base(innerExceptions)
-        {
-            
-        }
+        
     }
 }

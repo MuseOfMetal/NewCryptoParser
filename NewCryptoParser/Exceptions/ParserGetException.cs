@@ -1,15 +1,7 @@
-﻿namespace NewCryptoParser.Exceptions
-{
-    public class ParserGetException : Exception
-    {
-        public ParserGetException()
-        {
-            
-        }
+﻿namespace NewCryptoParser.Exceptions;
 
-        public ParserGetException(string message) : base(message)
-        {
-            
-        }
-    }
+public class ParserGetException : Exception
+{
+    public ParserGetException() { }
+    public ParserGetException(string message) : base(message) { }
 }

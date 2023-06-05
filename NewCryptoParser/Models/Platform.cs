@@ -1,7 +1,6 @@
-﻿namespace NewCryptoParser.Models
+﻿namespace NewCryptoParser.Models;
+
+public class Platform : CryptoParserSdk.Models.Platform
 {
-    public class Platform : CryptoParserSdk.Models.Platform
-    {
-        public int Id { get; set; }
-    }
+    public int Id { get; set; }
 }
