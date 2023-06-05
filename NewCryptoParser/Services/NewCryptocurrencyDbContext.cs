@@ -1,16 +1,13 @@
-﻿using CryptoParserSdk.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+﻿using Microsoft.EntityFrameworkCore;
 using NewCryptoParser.Models;
 using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
 
 namespace NewCryptoParser.Services;
 
-public class DbService : DbContext
+public class NewCryptocurrencyDbContext : DbContext
 {
-    public DbService(DbContextOptions<DbService> options) : base(options)
+    public NewCryptocurrencyDbContext(DbContextOptions<NewCryptocurrencyDbContext> options) : base(options)
     {
         Database.EnsureCreated();
     }
@@ -25,6 +22,4 @@ public class DbService : DbContext
     }
     [NotNull]
     public DbSet<NewCryptocurrencyProject> NewCryptocurrencyProjects { get; set; }
-
-   
 }

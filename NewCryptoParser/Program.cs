@@ -18,7 +18,7 @@ try
     builder.Services.AddNewCryptocurrencyProjectManager();
     builder.Services.AddHostedService<FileManagerService>();
     builder.Logging.ClearProviders();
-    builder.Services.AddDbContext<DbService>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    builder.Services.AddDbContext<NewCryptocurrencyDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
     builder.Host.UseNLog();
     var app = builder.Build();
     if (app.Environment.IsDevelopment())

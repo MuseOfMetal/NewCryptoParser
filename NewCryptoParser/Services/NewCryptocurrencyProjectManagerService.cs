@@ -60,7 +60,7 @@ namespace NewCryptoParser.Services
             }).Start();
         }
 
-        private void dataProccessor(string exchangeUrl, CryptoParserSdk.Models.ParsingResult project, DbService _context)
+        private void dataProccessor(string exchangeUrl, CryptoParserSdk.Models.ParsingResult project, NewCryptocurrencyDbContext _context)
         {
             var _projs = _context?.NewCryptocurrencyProjects;
             if (_projs == null)
@@ -94,9 +94,9 @@ namespace NewCryptoParser.Services
             }            
         }
 
-        private DbService getDbService()
+        private NewCryptocurrencyDbContext getDbService()
         {
-            return _provider.CreateScope().ServiceProvider.GetService<DbService>();
+            return _provider.CreateScope().ServiceProvider.GetService<NewCryptocurrencyDbContext>();
         }
     }
 }
