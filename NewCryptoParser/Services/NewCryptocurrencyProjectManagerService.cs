@@ -8,9 +8,7 @@ public class NewCryptocurrencyProjectManagerService : INewCryptocurrencyProjectM
 {
     private readonly IServiceProvider _provider;
     private readonly ILogger<NewCryptocurrencyProjectManagerService> _logger;
-
     private ConcurrentQueue<(string parserName, CryptoParserSdk.Models.ParsingResult project)> _buffer;
-
 
     public void AddNewProjects(string parserName, List<CryptoParserSdk.Models.ParsingResult> projects)
     {
@@ -88,13 +86,14 @@ public class NewCryptocurrencyProjectManagerService : INewCryptocurrencyProjectM
                 ExchangeUrl = exchangeUrl,
                 ProjectName = project.Name,
                 ProjectSymbol = project.Symbol,
-                Info = info
+                Info = info,
+                ParseTime = DateTime.Now
             });
         }            
     }
 
     private NewCryptocurrencyDbContext getDbService()
     {
-        return _provider.CreateScope().ServiceProvider.GetService<NewCryptocurrencyDbContext>();
+        return _provider.CreateScope().ServiceProvider.GetService<NewCryptocurrencyDbContext>()!;
     }
 }

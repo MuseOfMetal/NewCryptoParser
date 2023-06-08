@@ -1,0 +1,67 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+
+
+
+
+@if (Model.Projects is null)
+{
+    <h1>Не вдалося з'єднатися зі сервером</h1>
+}
+else
+{
+    @if (!string.IsNullOrEmpty(Model.search))
+    {
+        @if (Model.Projects.Count == 0)
+        {
+            <h1 style="margin-top: 500px">Нічого не знайдено</h1>
+        }
+        else
+        {
+            <h1>Результат пошуку</h1>
+        }
+
+
+}
+    else
+    {
+        <h1>Останні 100 отриманих криптовалют</h1>
+    }
+    @if (Model.Projects.Count > 0)
+    {
+        <table style="margin-bottom: 100px">
+            <thead>
+                <tr>
+                    <th>#Id</th>
+                    <th>Назва</th>
+                    <th>Тікер</th>
+                    <th>Дата парсінгу</th>
+                    <th>Знайдено на</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+
+                @foreach (var project in Model.Projects)
+                {
+                    <tr>
+                        <td><a>@project.Id</a> </td>
+                        <td><a asp-page="./Cryptocurrency" asp-route-id="@project.Id">@project.ProjectName</a></td>
+                        <td><a>@project.ProjectSymbol</a></td>
+                        <td><a>@project.ParseTime</a></td>
+                        <td>
+                            <a>@Model.GetName(project.ExchangeUrl)</a>
+                        </td>
+                        <td><img src="@Model.GetImageUrl(project.ExchangeUrl)" class="rounded-circle img-fluid icon" alt="@Model.GetName(project.ExchangeUrl)"></td>
+                    </tr>
+                }
+
+
+            </tbody>
+        </table>
+    }
+}

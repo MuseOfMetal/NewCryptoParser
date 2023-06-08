@@ -1,0 +1,138 @@
+﻿@page "{id:int}"
+@model CryptocurrencyModel
+@{
+    ViewData["Title"] = "Privacy Policy";
+}
+<h1>
+    Детальна інформація про знайдену криптовалюту
+</h1>
+<table>
+    <tr>
+        <td>
+            Назва
+        </td>
+        <td>
+            @Model.Project.ProjectName
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Тікер
+        </td>
+        <td>
+            @Model.Project.ProjectSymbol
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Дата парсингу
+        </td>
+        <td>
+            @Model.Project.ParseTime
+        </td>
+    </tr>
+    <tr>
+        <td>
+            Знайдено на
+        </td>
+        <td>
+            <a href="@Model.Project.ExchangeUrl">@Model.GetName(Model.Project.ExchangeUrl)</a>
+        </td>
+    </tr>
+</table>
+@if (!string.IsNullOrEmpty(@Model.Project.Info.Description))
+{
+    <h2>
+        Опис
+    </h2>
+    <div style="width: 79%; border-radius: 5px; padding: 20px; background-color: white;">
+        <a>@Model.Project.Info.Description</a>
+    </div>
+    
+}
+@if (Model.Project.Info.Links.Count > 0)
+{
+    <h2>
+        Посилання
+    </h2>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    Назва
+                </th>
+                <th>
+                    Посилання
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var link in Model.Project.Info.Links)
+            {
+                if (link.LinkType == 0)
+                {
+                    <tr>
+                        <td>
+                            @link.OtherLinkType
+                        </td>
+                        <td>
+                            @string.Join('\n', link.Urls)
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <td>
+                            @link.LinkType.ToString()
+                        </td>
+                        <td>
+                            @foreach (var item in link.Urls)
+                            {
+                                @item
+                                <br>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+@if (Model.Project.Info.Platforms.Count > 0)
+{
+    <h2>
+        Платформи
+    </h2>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    Назва
+                </th>
+                <th>
+                    Тип
+                </th>
+                <th>
+                    Smart Contract
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var platform in Model.Project.Info.Platforms)
+            {
+                <tr>
+                    <td>
+                        @platform.Name
+                    </td>
+                    <td>
+                        @platform.Type
+                    </td>
+                    <td>
+                        @platform.SmartContract
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

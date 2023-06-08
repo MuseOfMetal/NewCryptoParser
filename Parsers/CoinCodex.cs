@@ -75,13 +75,7 @@ namespace ParserPlugin
 
             public class Social
             {
-                public string name { get; set; }
-                public string id { get; set; }
-                public string coincodex_coin_symbol { get; set; }
-                public string coincodex_socials_id { get; set; }
                 public string value { get; set; }
-                public string label { get; set; }
-                public string order_by { get; set; }
             }
         }
     }

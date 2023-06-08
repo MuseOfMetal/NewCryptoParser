@@ -23,7 +23,12 @@ public class CryptocurrencyController : ControllerBase
             return UnprocessableEntity("Count must be 1 or greater");
         if (count == 1)
             return Ok(_projectManager.GetProjects().Last());
-        return Ok(_projectManager.GetProjects().TakeLast(count));
+        var _plist = _projectManager.GetProjects().ToList();
+        _plist.Reverse();
+        if (_plist.Count() <= count)
+            return Ok(_plist);
+        return Ok(_plist.Take(count));
+
     }
 
     [HttpGet("GetById")]
@@ -35,5 +40,16 @@ public class CryptocurrencyController : ControllerBase
         if (project == null)
             return NotFound();
         return Ok(project);
+    }
+
+    [HttpGet("Search")]
+    public IActionResult Search(string query)
+    {
+        if (string.IsNullOrEmpty(query))
+            return UnprocessableEntity("query parameter cannot be empty");
+        var projects = _projectManager.GetProjects().ToList();
+        projects.Reverse();
+        var selectedProjects = projects.Where(x=>x.ProjectName.ToLower().Contains(query.ToLower()) || x.ProjectSymbol.ToLower().Contains(query.ToLower()));
+        return Ok(selectedProjects);
     }
 }
