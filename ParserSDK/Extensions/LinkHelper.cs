@@ -55,7 +55,7 @@ public static class LinkHelper
         if (string.IsNullOrEmpty(url))
             return;
 
-        Link linkObj;
+        Link? linkObj;
 
         if (type == 0)
             linkObj = list.FirstOrDefault(x => x.LinkType == type && x.OtherLinkType == otherType);
