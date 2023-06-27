@@ -17,7 +17,6 @@ public static class TestParser<T> where T : CryptoParserAbstract, new()
 		await timer.WaitForNextTickAsync();
 
 		if (parser.ParserConfig.MultiQueryInfoSupport)
-		{
 			if (projects.Count > 0)
 			{
 				IEnumerable<MultiQueryCryptocurrencyInfo[]> chunks;
@@ -69,38 +68,35 @@ public static class TestParser<T> where T : CryptoParserAbstract, new()
 					await timer.WaitForNextTickAsync();
 				}
 			}
-		}
-		else
-		{
-			foreach (var project in projects)
-			{
-				Console.WriteLine($"Project name: {project.Name}");
-				Console.WriteLine($"Project symbol: {project.Symbol}");
-				Console.WriteLine($"Project url: {project.ProjectUrl}");
-				Console.WriteLine($"Project param: {project.ParamToSearchInfo}");
-				Console.WriteLine("Info:");
-				project.CryptocurrencyInfo = parser.GetCryptocurrencyInfo(project.ParamToSearchInfo, project.CryptocurrencyInfo ?? new CryptocurrencyInfo());
-				await timer.WaitForNextTickAsync();
-				await Console.Out.WriteLineAsync($"Description: {project.CryptocurrencyInfo.Description}");
-				await Console.Out.WriteLineAsync("---------LINKS---------");
-				foreach (var link in project.CryptocurrencyInfo.Links)
+			else
+				foreach (var project in projects)
 				{
-					await Console.Out.WriteLineAsync($"{(link.LinkType == 0 ? link.OtherLinkType : link.LinkType)}");
-					foreach (var url in link.Urls)
-						await Console.Out.WriteLineAsync(url);
-					await Console.Out.WriteLineAsync("================================");
+					Console.WriteLine($"Project name: {project.Name}");
+					Console.WriteLine($"Project symbol: {project.Symbol}");
+					Console.WriteLine($"Project url: {project.ProjectUrl}");
+					Console.WriteLine($"Project param: {project.ParamToSearchInfo}");
+					Console.WriteLine("Info:");
+					project.CryptocurrencyInfo = parser.GetCryptocurrencyInfo(project.ParamToSearchInfo, project.CryptocurrencyInfo ?? new CryptocurrencyInfo());
+					await timer.WaitForNextTickAsync();
+					await Console.Out.WriteLineAsync($"Description: {project.CryptocurrencyInfo.Description}");
+					await Console.Out.WriteLineAsync("---------LINKS---------");
+					foreach (var link in project.CryptocurrencyInfo.Links)
+					{
+						await Console.Out.WriteLineAsync($"{(link.LinkType == 0 ? link.OtherLinkType : link.LinkType)}");
+						foreach (var url in link.Urls)
+							await Console.Out.WriteLineAsync(url);
+						await Console.Out.WriteLineAsync("================================");
+					}
+					await Console.Out.WriteLineAsync("-----------------------");
+					await Console.Out.WriteLineAsync("---------PLATFORMS---------");
+					foreach (var platform in project.CryptocurrencyInfo.Platforms)
+					{
+						await Console.Out.WriteLineAsync($"Name: {platform.Name}");
+						await Console.Out.WriteLineAsync($"Type: {platform.Type}");
+						await Console.Out.WriteLineAsync($"Contract: {platform.SmartContract}");
+						await Console.Out.WriteLineAsync("==============================");
+					}
+					await Console.Out.WriteLineAsync("---------------------------");
 				}
-				await Console.Out.WriteLineAsync("-----------------------");
-				await Console.Out.WriteLineAsync("---------PLATFORMS---------");
-				foreach (var platform in project.CryptocurrencyInfo.Platforms)
-				{
-					await Console.Out.WriteLineAsync($"Name: {platform.Name}");
-					await Console.Out.WriteLineAsync($"Type: {platform.Type}");
-					await Console.Out.WriteLineAsync($"Contract: {platform.SmartContract}");
-					await Console.Out.WriteLineAsync("==============================");
-				}
-				await Console.Out.WriteLineAsync("---------------------------");
-			}
-		}
 	}
 }
