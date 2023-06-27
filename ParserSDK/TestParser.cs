@@ -52,9 +52,7 @@ public static class TestParser<T> where T : CryptoParserAbstract, new()
 						{
 							await Console.Out.WriteLineAsync($"{(link.LinkType == 0 ? link.OtherLinkType : link.LinkType)}");
 							foreach (var url in link.Urls)
-							{
 								await Console.Out.WriteLineAsync(url);
-							}
 							await Console.Out.WriteLineAsync("================================");
 						}
 						await Console.Out.WriteLineAsync("-----------------------");
@@ -70,12 +68,7 @@ public static class TestParser<T> where T : CryptoParserAbstract, new()
 					}
 					await timer.WaitForNextTickAsync();
 				}
-
 			}
-
-
-
-
 		}
 		else
 		{
@@ -94,9 +87,7 @@ public static class TestParser<T> where T : CryptoParserAbstract, new()
 				{
 					await Console.Out.WriteLineAsync($"{(link.LinkType == 0 ? link.OtherLinkType : link.LinkType)}");
 					foreach (var url in link.Urls)
-					{
 						await Console.Out.WriteLineAsync(url);
-					}
 					await Console.Out.WriteLineAsync("================================");
 				}
 				await Console.Out.WriteLineAsync("-----------------------");
@@ -110,15 +101,6 @@ public static class TestParser<T> where T : CryptoParserAbstract, new()
 				}
 				await Console.Out.WriteLineAsync("---------------------------");
 			}
-		}
-	}
-
-	private static void print(string name, List<string> texts)
-	{
-		Console.WriteLine(name);
-		foreach (var item in texts)
-		{
-			Console.WriteLine(item);
 		}
 	}
 }
