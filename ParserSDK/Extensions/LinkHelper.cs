@@ -74,7 +74,6 @@ public static class LinkHelper
         else
             if (!linkObj.Urls.Contains(url))
             linkObj.Urls.Add(url);
-
     }
 
     public static void AddLinks(this List<Link> list, LinkType type, params string[] urls)
