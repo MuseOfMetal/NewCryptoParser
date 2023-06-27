@@ -1,8 +1,7 @@
-﻿namespace CryptoParserSdk.Models
+﻿namespace CryptoParserSdk.Models;
+
+public class MultiQueryCryptocurrencyInfo
 {
-    public class MultiQueryCryptocurrencyInfo
-    {
-        public string ParamToSearchInfo { get; set; }
-        public CryptocurrencyInfo CryptocurrencyInfo { get; set; }
-    }
+    public string ParamToSearchInfo { get; set; }
+    public CryptocurrencyInfo CryptocurrencyInfo { get; set; }
 }

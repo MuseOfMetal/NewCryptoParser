@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using NewCryptoParser.Abstract;
 using NewCryptoParser.Services;
-using Newtonsoft.Json;
 using NLog;
 using NLog.Web;
 
@@ -25,7 +23,7 @@ try
     {
         app.UseSwagger();
         app.UseSwaggerUI();
-    }    
+    }
     app.UseHttpsRedirection();
     app.UseAuthorization();
     app.MapControllers();
@@ -34,7 +32,8 @@ try
 catch (Exception exception)
 {
     logger.Error(exception, "Stopped program because of exception");
-    throw;
+	
+	throw;
 }
 finally
 {

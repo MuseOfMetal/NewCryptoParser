@@ -6,5 +6,4 @@ public class ParsingResult
     public string ProjectUrl { get; set; } = string.Empty;
     public string ParamToSearchInfo { get; set; } = string.Empty;
     public CryptocurrencyInfo? CryptocurrencyInfo { get; set; }
-
 }
