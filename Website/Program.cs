@@ -13,7 +13,6 @@ public class Program
         });
         builder.Services.AddScoped<ParserInfoService>();
         var app = builder.Build();
-        Console.WriteLine(builder.Configuration.GetSection("ApiAddresss").Get<string>());
         if (!app.Environment.IsDevelopment())
         {
             app.UseExceptionHandler("/Error");
